@@ -28,14 +28,6 @@ export const GET = async (request) => {
   //check if user provide one of 'studentId' or 'courseNo'
   //User must not provide both values, and must not provide nothing
 
-  // return NextResponse.json(
-  //   {
-  //     ok: false,
-  //     message: "Please provide either studentId or courseNo and not both!",
-  //   },
-  //   { status: 400 }
-  // );
-
   //get all courses enrolled by a student
   if (studentId) {
     const courseNoList = [];
@@ -59,16 +51,29 @@ export const GET = async (request) => {
   } else if (courseNo) {
     const studentIdList = [];
     for (const enroll of DB.enrollments) {
-      //your code here
+      if (enroll.courseNo == courseNo) {
+        studentIdList.push(enroll.studentId);
+      }
     }
 
     const students = [];
-    //your code here
+    for (const studentId of studentIdList) {
+      const getStudent = DB.students.find((x) => x.studentId === studentId);
+      students.push(getStudent);
+    }
 
     return NextResponse.json({
       ok: true,
       students,
     });
+  } else {
+    return NextResponse.json(
+      {
+        ok: false,
+        message: "Please provide either studentId or courseNo and not both!",
+      },
+      { status: 400 }
+    );
   }
 };
 
@@ -141,6 +146,32 @@ export const DELETE = async (request) => {
   const { studentId, courseNo } = body;
 
   //check if studentId and courseNo exist on enrollment
+  const foundId = DB.enrollments.findIndex(
+    (std) => std.studentId === studentId
+  );
+  const foundCourse = DB.enrollments.findIndex(
+    (std) => std.courseNo === courseNo
+  );
+
+  if (foundId === -1 || foundCourse === -1) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message: "Enrollment does not exist",
+      },
+      { status: 404 }
+    );
+  }
+
+  let filtered = DB.enrollments;
+  // let del = DB.enrollments;
+  if (filtered !== null) {
+    // del = del.filter((std) => std.studentId === studentId);
+    // del = del.filter((std) => std.courseNo === courseNo);
+
+    filtered = filtered.filter((std) => std.studentId !== studentId);
+    filtered = filtered.filter((std) => std.courseNo !== courseNo);
+  }
 
   // return NextResponse.json(
   //   {
